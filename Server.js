@@ -412,26 +412,37 @@ app.get('/getApprovedExpensesLast3Months', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
-app.get('/getListOfMonths', (req, res) => {
-  const moment=require('moment')
-  const generateMonthsList = () => {
-    const monthsList = [];
-    const startMonth = moment('2023-10'); // Starting from October 2023
-    const currentMonth = moment(); // Current month
+app.get('/getListOfMonths', async (req, res) => {
+  try {
+    const moment=require('moment')
+    const oldestExpense = await Expense.findOne({}, {}, { sort: { date: 1 } });
+    const newestExpense = await Expense.findOne({}, {}, { sort: { date: -1 } });
 
-    let current = startMonth.clone();
+   
+    const startMonth = oldestExpense ? moment(oldestExpense.date).startOf('month') : moment().startOf('month');
 
-    while (current.isSameOrBefore(currentMonth)) {
-      monthsList.push(current.format('MMMM-YYYY'));
-      current.add(1, 'month');
-    }
+    
+    const endMonth = newestExpense ? moment(newestExpense.date).startOf('month') : moment().startOf('month');
 
-    return monthsList;
-  };
+    const generateMonthsList = () => {
+      const monthsList = [];
+      let current = startMonth.clone();
 
-  const listOfMonths = generateMonthsList();
+      while (current.isSameOrBefore(endMonth, 'month')) {
+        monthsList.push(current.format('MMMM-YYYY'));
+        current.add(1, 'month');
+      }
 
-  res.json(listOfMonths);
+      return monthsList;
+    };
+
+    const listOfMonths = generateMonthsList();
+
+    res.json(listOfMonths);
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 });
 
 
