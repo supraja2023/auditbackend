@@ -268,7 +268,7 @@ app.get('/lastMonthCosts', async (req, res) => {
           $expr: {
             $and: [
               { $eq: [{ $year: '$date' }, lastYear] },
-              { $eq: [{ $month: '$date' }, lastMonth] },s
+              { $eq: [{ $month: '$date' }, lastMonth] },
             ],
           },
         },
